@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "913725694142",
+    "project_id": "sunspark-efc9c",
+    "storage_bucket": "sunspark-efc9c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:913725694142:android:a97d1b6f6f3a45edc13eef",
+        "android_client_info": {
+          "package_name": "com.example.sunspark"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "913725694142-g46rja75o0er3uc0bs9h164qnig6e54e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBoVxnV0mIOicFO5IvyufkIJ9XihFG-4jA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "913725694142-g46rja75o0er3uc0bs9h164qnig6e54e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
