@@ -49,7 +49,7 @@ class _AddReportPageState extends State<AddReportPage> {
       accountSid:
           'AC416086298c7539950fa857cb837ff2f8', // replace *** with Account SID
       authToken:
-          'adf0405055629f063d464a9def81d164', // replace xxx with Auth Token
+          '94274a5eed4cf1ed806b772956a50b4a', // replace xxx with Auth Token
       twilioNumber: '+19899127501' // replace .... with Twilio Number
       );
 
@@ -210,7 +210,7 @@ class _AddReportPageState extends State<AddReportPage> {
         appBar: AppBar(
           title: InkWell(
             onTap: () {
-              _sendSMS("Hi this is a sample message from the app");
+              // _sendSMS("Hi this is a sample message from the app");
             },
             child: TextRegular(
                 text: 'Report Incident', fontSize: 18, color: Colors.white),
@@ -675,23 +675,6 @@ class _AddReportPageState extends State<AddReportPage> {
     // await telephony.sendSms(to: '+639615381873', message: message);
     // twilioFlutter.sendSMS(toNumber: '+639199032452', messageBody: message);
     twilioFlutter.sendSMS(toNumber: '+639464720678', messageBody: message);
-
-    //   accountSid:
-    //     'ACa8246a5db6c24b81985b07ecec2b2589', // replace *** with Account SID
-    // authToken:
-    //     '47bd536791bcc6a57978aad7e2afda2d',
-    // var credentials =
-    //     'ACa8246a5db6c24b81985b07ecec2b2589:47bd536791bcc6a57978aad7e2afda2d';
-    // var bytes = utf8.encode(credentials);
-    // var base64Str = base64.encode(bytes);
-    // var url = Uri.parse(
-    //     'https://api.twilio.com/2010-04-01/Accounts/47bd536791bcc6a57978aad7e2afda2d/Messages.json');
-
-    // var response = await http.post(url,
-    //     headers: {'Authorization': 'Basic ${base64Str}'},
-    //     body: {'From': '+19899127501', 'To': '+639464720678', 'Body': message});
-    // print('Response status: ${response.statusCode}');
-    // print('Response body: ${response.body}');
   }
 
   Future<void> _selectDateTime(BuildContext context) async {
