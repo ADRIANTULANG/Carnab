@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class TextFieldWidget extends StatefulWidget {
   final String label;
@@ -13,6 +14,8 @@ class TextFieldWidget extends StatefulWidget {
   final bool? enabled;
   final String? Function(String?)? validator;
   final bool? isRequred;
+  final Function? onChangeText;
+  final List<TextInputFormatter>? inputFormatters;
 
   TextFieldWidget({
     super.key,
@@ -28,6 +31,8 @@ class TextFieldWidget extends StatefulWidget {
     this.isRequred = false,
     this.inputType = TextInputType.text,
     this.validator,
+    this.inputFormatters,
+    this.onChangeText,
   });
 
   @override
@@ -85,6 +90,12 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
             child: TextFormField(
                 enabled: widget.enabled,
                 keyboardType: widget.inputType,
+                onChanged: (value) {
+                  if (widget.onChangeText != null) {
+                    widget.onChangeText!();
+                  }
+                },
+                inputFormatters: widget.inputFormatters,
                 decoration: InputDecoration(
                   suffixIcon: widget.isPassword!
                       ? IconButton(

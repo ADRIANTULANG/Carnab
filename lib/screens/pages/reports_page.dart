@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sunspark/screens/pages/details_page.dart';
 import 'package:sunspark/widgets/text_widget.dart';
-import 'package:intl/intl.dart' show DateFormat, toBeginningOfSentenceCase;
 
 import '../../widgets/drawer_widget.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sunspark/screens/add_report_page.dart';
 import 'package:sunspark/screens/auth/login_screen.dart';
+import 'package:sunspark/screens/auth/user_login.dart';
 import 'package:sunspark/widgets/text_widget.dart';
 
 class LandingScreen extends StatelessWidget {
@@ -84,9 +84,7 @@ class LandingScreen extends StatelessWidget {
                   GestureDetector(
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const AddReportPage(
-                                inUser: true,
-                              )));
+                          builder: (context) => const UserLogin()));
                     },
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,

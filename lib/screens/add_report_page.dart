@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sunspark/screens/new_page.dart';
 import 'package:sunspark/services/add_report.dart';
 import 'package:sunspark/widgets/button_widget.dart';
@@ -34,24 +36,18 @@ class _AddReportPageState extends State<AddReportPage> {
   void initState() {
     super.initState();
     determinePosition();
+    fillInformationAutomatically();
     addMarker();
   }
 
-  // TwilioFlutter twilioFlutter = TwilioFlutter(
-  //     accountSid:
-  //         'ACeef255629207be814a1d605dc5ec9f8a', // replace *** with Account SID
-  //     authToken:
-  //         'e7725ea4e6c953bfc0fcf432bfbb12e8', // replace xxx with Auth Token
-  //     twilioNumber: '+12569603461' // replace .... with Twilio Number
-  //     );
+  String? validIDurl;
+  String? id;
+  XFile? photo;
 
   TwilioFlutter twilioFlutter = TwilioFlutter(
-      accountSid:
-          'AC416086298c7539950fa857cb837ff2f8', // replace *** with Account SID
-      authToken:
-          '94274a5eed4cf1ed806b772956a50b4a', // replace xxx with Auth Token
-      twilioNumber: '+19899127501' // replace .... with Twilio Number
-      );
+      accountSid: 'AC416086298c7539950fa857cb837ff2f8',
+      authToken: '94274a5eed4cf1ed806b772956a50b4a',
+      twilioNumber: '+19899127501');
 
   final nameController = TextEditingController();
 
@@ -104,6 +100,39 @@ class _AddReportPageState extends State<AddReportPage> {
   bool hasLoaded = false;
   String others = '';
 
+  void logout() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    Navigator.pop(context);
+  }
+
+  void fillInformationAutomatically() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? firstname = await prefs.getString('firstname');
+    String? lastname = await prefs.getString('lastname');
+    String? contactno = await prefs.getString('contactno');
+    String? validID = await prefs.getString('validID');
+    String? userID = await prefs.getString('id');
+    if (firstname != null && lastname != null && contactno != null) {
+      nameController.text = firstname + " " + lastname;
+      numberController.text = contactno;
+      setState(() {
+        validIDurl = validID;
+        id = userID;
+      });
+    }
+  }
+
+  getImageForValidID({required ImageSource source}) async {
+    ImagePicker picker = ImagePicker();
+    XFile? image = await picker.pickImage(source: source);
+    if (image != null) {
+      setState(() {
+        photo = image;
+      });
+    }
+  }
+
   addMarker() {
     Geolocator.getCurrentPosition().then((position) {
       setState(() {
@@ -112,13 +141,7 @@ class _AddReportPageState extends State<AddReportPage> {
 
         markers.add(
           Marker(
-            draggable: true,
-            onDrag: (value) {
-              setState(() {
-                lat = value.latitude;
-                long = value.longitude;
-              });
-            },
+            draggable: false,
             icon: BitmapDescriptor.defaultMarker,
             markerId: const MarkerId('my location'),
             position: LatLng(position.latitude, position.longitude),
@@ -200,6 +223,16 @@ class _AddReportPageState extends State<AddReportPage> {
     }
   }
 
+  getHeight(percent) {
+    var toDecimal = percent / 100;
+    return MediaQuery.of(context).size.height * toDecimal;
+  }
+
+  getWidth(percent) {
+    var toDecimal = percent / 100;
+    return MediaQuery.of(context).size.width * toDecimal;
+  }
+
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -208,13 +241,21 @@ class _AddReportPageState extends State<AddReportPage> {
         DateFormat('yyyy-MM-dd hh:mm a').format(selectedDateTime);
     return Scaffold(
         appBar: AppBar(
-          title: InkWell(
-            onTap: () {
-              // _sendSMS("Hi this is a sample message from the app");
-            },
-            child: TextRegular(
-                text: 'Report Incident', fontSize: 18, color: Colors.white),
-          ),
+          leading: id == null ? null : SizedBox(),
+          title: TextRegular(
+              text: 'Report Incident', fontSize: 18, color: Colors.white),
+          actions: id == null
+              ? []
+              : [
+                  InkWell(
+                      onTap: () {
+                        logout();
+                      },
+                      child: Icon(Icons.logout)),
+                  SizedBox(
+                    width: getWidth(5),
+                  )
+                ],
           centerTitle: true,
         ),
         body: hasLoaded
@@ -351,7 +392,7 @@ class _AddReportPageState extends State<AddReportPage> {
                                 value: item,
                                 child: Center(
                                   child: SizedBox(
-                                    width: 300,
+                                    width: getWidth(80),
                                     child: Padding(
                                       padding: const EdgeInsets.all(5.0),
                                       child: Text(
@@ -417,18 +458,35 @@ class _AddReportPageState extends State<AddReportPage> {
                             ),
                             Container(
                               color: Colors.black,
-                              height: 200,
+                              height: getHeight(35),
                               width: double.infinity,
                               child: GoogleMap(
                                 markers: markers,
                                 myLocationEnabled: true,
                                 myLocationButtonEnabled: true,
-                                onCameraMove: (position) {
+                                onTap: (value) {
+                                  markers.clear();
                                   setState(() {
-                                    lat = position.target.latitude;
-                                    long = position.target.longitude;
+                                    markers.add(
+                                      Marker(
+                                        draggable: false,
+                                        icon: BitmapDescriptor.defaultMarker,
+                                        markerId: const MarkerId('my location'),
+                                        position: LatLng(
+                                            value.latitude, value.longitude),
+                                      ),
+                                    );
                                   });
+                                  lat = value.latitude;
+                                  long = value.longitude;
                                 },
+                                gestureRecognizers: <Factory<
+                                    OneSequenceGestureRecognizer>>{
+                                  Factory<OneSequenceGestureRecognizer>(
+                                    () => EagerGestureRecognizer(),
+                                  ),
+                                },
+                                scrollGesturesEnabled: true,
                                 mapType: MapType.normal,
                                 initialCameraPosition: CameraPosition(
                                   target: LatLng(lat, long),
@@ -512,6 +570,71 @@ class _AddReportPageState extends State<AddReportPage> {
                         ),
                         const SizedBox(
                           height: 20,
+                        ),
+                        validIDurl == null
+                            ? Column(
+                                children: [
+                                  SizedBox(
+                                    width: getWidth(100),
+                                    child: TextBold(
+                                      text: 'Valid ID (photo)',
+                                      fontSize: 18,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: getHeight(2),
+                                  ),
+                                  Container(
+                                    height: getHeight(15),
+                                    width: getWidth(100),
+                                    decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey),
+                                        borderRadius: BorderRadius.circular(4)),
+                                    child: photo != null
+                                        ? Image(
+                                            image: FileImage(File(photo!.path)))
+                                        : Icon(Icons.image),
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      TextButton.icon(
+                                        onPressed: () {
+                                          getImageForValidID(
+                                              source: ImageSource.gallery);
+                                        },
+                                        icon: const Icon(
+                                          Icons.file_upload,
+                                          color: Colors.black,
+                                        ),
+                                        label: TextRegular(
+                                            text: 'Browse Gallery',
+                                            fontSize: 12,
+                                            color: Colors.grey),
+                                      ),
+                                      TextButton.icon(
+                                        onPressed: () {
+                                          getImageForValidID(
+                                              source: ImageSource.camera);
+                                        },
+                                        icon: const Icon(
+                                          Icons.camera,
+                                          color: Colors.black,
+                                        ),
+                                        label: TextRegular(
+                                            text: 'Camera',
+                                            fontSize: 12,
+                                            color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              )
+                            : SizedBox(),
+                        const SizedBox(
+                          height: 10,
                         ),
                         Row(
                           children: [
@@ -677,29 +800,29 @@ class _AddReportPageState extends State<AddReportPage> {
     twilioFlutter.sendSMS(toNumber: '+639464720678', messageBody: message);
   }
 
-  Future<void> _selectDateTime(BuildContext context) async {
-    final DateTime? pickedDateTime = await showDatePicker(
-      context: context,
-      initialDate: selectedDateTime,
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
-    );
+  // Future<void> _selectDateTime(BuildContext context) async {
+  //   final DateTime? pickedDateTime = await showDatePicker(
+  //     context: context,
+  //     initialDate: selectedDateTime,
+  //     firstDate: DateTime(1900),
+  //     lastDate: DateTime(2100),
+  //   );
 
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(selectedDateTime),
-    );
+  //   final TimeOfDay? pickedTime = await showTimePicker(
+  //     context: context,
+  //     initialTime: TimeOfDay.fromDateTime(selectedDateTime),
+  //   );
 
-    setState(() {
-      selectedDateTime = DateTime(
-        pickedDateTime!.year,
-        pickedDateTime.month,
-        pickedDateTime.day,
-        pickedTime!.hour,
-        pickedTime.minute,
-      );
-    });
-  }
+  //   setState(() {
+  //     selectedDateTime = DateTime(
+  //       pickedDateTime!.year,
+  //       pickedDateTime.month,
+  //       pickedDateTime.day,
+  //       pickedTime!.hour,
+  //       pickedTime.minute,
+  //     );
+  //   });
+  // }
 
   Future<Position> determinePosition() async {
     bool serviceEnabled;
