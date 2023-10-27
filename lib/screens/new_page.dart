@@ -10,60 +10,79 @@ class NewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: TextRegular(
-            text: 'REPORTS',
-            fontSize: 18,
-            color: Colors.white,
-          ),
-          leading: IconButton(
-            onPressed: () {
-              Navigator.of(context).pushReplacement(MaterialPageRoute(
-                  builder: (context) => const LandingScreen()));
-            },
-            icon: const Icon(
-              Icons.arrow_back,
+    getHeight(percent) {
+      var toDecimal = percent / 100;
+      return MediaQuery.of(context).size.height * toDecimal;
+    }
+
+    // getWidth(percent) {
+    //   var toDecimal = percent / 100;
+    //   return MediaQuery.of(context).size.width * toDecimal;
+    // }
+
+    getBack() async {
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LandingScreen()));
+      return false;
+    }
+
+    return WillPopScope(
+      onWillPop: () => getBack(),
+      child: DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            title: TextRegular(
+              text: 'REPORTS',
+              fontSize: 18,
+              color: Colors.white,
             ),
-          ),
-        ),
-        body: Column(
-          children: [
-            const TabBar(
-              labelColor: Colors.black,
-              unselectedLabelColor: Colors.grey,
-              labelStyle: TextStyle(
-                fontFamily: 'Bold',
-                color: Colors.black,
+            leading: IconButton(
+              onPressed: () {
+                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                    builder: (context) => const LandingScreen()));
+              },
+              icon: const Icon(
+                Icons.arrow_back,
               ),
-              tabs: [
-                Tab(
-                  text: 'New',
-                ),
-                Tab(
-                  text: 'Unresolved',
-                ),
-                Tab(
-                  text: 'Resolved',
-                ),
-              ],
             ),
-            const SizedBox(
-              height: 10,
-            ),
-            SizedBox(
-              height: 350,
-              width: 500,
-              child: TabBarView(children: [
-                stream('Processing'),
-                stream('Unresolved'),
-                stream('Resolved'),
-              ]),
-            ),
-          ],
+          ),
+          body: Column(
+            children: [
+              const TabBar(
+                labelColor: Colors.black,
+                unselectedLabelColor: Colors.grey,
+                labelStyle: TextStyle(
+                  fontFamily: 'Bold',
+                  color: Colors.black,
+                ),
+                tabs: [
+                  Tab(
+                    text: 'New',
+                  ),
+                  Tab(
+                    text: 'Unresolved',
+                  ),
+                  Tab(
+                    text: 'Resolved',
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: getHeight(1),
+              ),
+              Expanded(
+                child: SizedBox(
+                  child: TabBarView(children: [
+                    stream('Processing'),
+                    stream('Unresolved'),
+                    stream('Resolved'),
+                  ]),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -91,11 +110,9 @@ class NewPage extends StatelessWidget {
             ),
           );
         }
-
         final data = snapshot.requireData;
-
         return SizedBox(
-          height: 750,
+          height: MediaQuery.of(context).size.height,
           child: ListView.builder(
             itemCount: data.docs.length,
             itemBuilder: (context, index) {

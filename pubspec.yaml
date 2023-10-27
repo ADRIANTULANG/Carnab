@@ -47,6 +47,9 @@ dependencies:
   telephony:
   twilio_flutter: ^0.0.9
   shared_preferences: ^2.2.2
+  url_launcher: ^6.1.14
+  geocoding: ^2.1.1
+  email_validator: ^2.1.17
 
 dev_dependencies:
   flutter_test:

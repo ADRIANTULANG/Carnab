@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,6 +26,7 @@ class _UserLoginState extends State<UserLogin> {
         .where('password', isEqualTo: password.text)
         .limit(1)
         .get();
+    print(res.docs);
     if (res.docs.length > 0) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('id', res.docs[0].id);

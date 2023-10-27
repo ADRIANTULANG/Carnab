@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:sunspark/widgets/button_widget.dart';
 import 'package:sunspark/widgets/text_widget.dart';
 import 'package:sunspark/widgets/textfield_widget.dart';
 
@@ -30,6 +33,28 @@ class _DetailsPageState extends State<DetailsPage> {
 
   Set<Marker> markers = {};
 
+  bool isReportTaken = false;
+
+  String officerName = '';
+  String officerID = '';
+
+  getPoliceInfo() async {
+    try {
+      String userid = await FirebaseAuth.instance.currentUser!.uid;
+      var result = await FirebaseFirestore.instance
+          .collection('Officers')
+          .doc(userid)
+          .get();
+      var officerInfo = result.data();
+      if (officerInfo != null) {
+        officerName = officerInfo['name'];
+        officerID = officerInfo['id'];
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   addMarker(double lat, double long) {
     markers.add(
       Marker(
@@ -39,6 +64,109 @@ class _DetailsPageState extends State<DetailsPage> {
         position: LatLng(lat, long),
       ),
     );
+  }
+
+  checkifReportTaken() async {
+    try {
+      var result = await FirebaseFirestore.instance
+          .collection('Reports')
+          .doc(widget.reportId)
+          .get();
+
+      var reportData = await result.data();
+      if (reportData != null) {
+        if (reportData.containsKey('police_taked_action')) {
+          setState(() {
+            isReportTaken = true;
+          });
+        } else {
+          setState(() {
+            isReportTaken = false;
+          });
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  takeAction() async {
+    try {
+      var result = await FirebaseFirestore.instance
+          .collection('Reports')
+          .doc(widget.reportId)
+          .get();
+
+      var reportData = await result.data();
+      if (reportData != null) {
+        if (reportData.containsKey('police_taked_action')) {
+          Fluttertoast.showToast(
+              msg: "The report has already been addressed.",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.CENTER,
+              backgroundColor: Colors.green,
+              textColor: Colors.white,
+              fontSize: 16.0);
+        } else {
+          Fluttertoast.showToast(
+              msg: "Report taken.",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.CENTER,
+              backgroundColor: Colors.green,
+              textColor: Colors.white,
+              fontSize: 16.0);
+          String userid = await FirebaseAuth.instance.currentUser!.uid;
+          var officerDocumentRef = await FirebaseFirestore.instance
+              .collection('Officers')
+              .doc(userid);
+          await FirebaseFirestore.instance
+              .collection('Reports')
+              .doc(widget.reportId)
+              .update({
+            "police_taked_action": officerDocumentRef,
+            "police_name": officerName,
+            "date_taken": Timestamp.now()
+          });
+        }
+      }
+      checkifReportTaken();
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  // populateValidID() async {
+  //   try {
+  //     var result = await FirebaseFirestore.instance.collection('Reports').get();
+  //     var reports = result.docs;
+  //     WriteBatch batch = FirebaseFirestore.instance.batch();
+  //     for (var i = 0; i < reports.length; i++) {
+  //       var documentRef = await FirebaseFirestore.instance
+  //           .collection('Reports')
+  //           .doc(reports[i].id);
+  //       batch.update(documentRef, {"date_taken": Timestamp.now()});
+  //     }
+  //     await batch.commit();
+  //   } catch (e) {
+  //     print(e);
+  //   }
+  // }
+
+  getHeight(percent) {
+    var toDecimal = percent / 100;
+    return MediaQuery.of(context).size.height * toDecimal;
+  }
+
+  getWidth(percent) {
+    var toDecimal = percent / 100;
+    return MediaQuery.of(context).size.width * toDecimal;
+  }
+
+  @override
+  void initState() {
+    getPoliceInfo();
+    checkifReportTaken();
+    super.initState();
   }
 
   @override
@@ -220,7 +348,10 @@ class _DetailsPageState extends State<DetailsPage> {
                                 zoom: 14.4746,
                               ),
                               onMapCreated: (GoogleMapController controller) {
-                                _controller.complete(controller);
+                                if (_controller.isCompleted) {
+                                } else {
+                                  _controller.complete(controller);
+                                }
                               },
                             ),
                           ),
@@ -260,6 +391,29 @@ class _DetailsPageState extends State<DetailsPage> {
                             width: double.infinity,
                           ),
                         ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      TextBold(
+                        text: 'Valid ID (photo)',
+                        fontSize: 18,
+                        color: Colors.black,
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2.5, bottom: 2.5),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                                image: NetworkImage(data['validID']),
+                                fit: BoxFit.cover),
+                          ),
+                          height: 230,
+                          width: double.infinity,
+                        ),
+                      ),
                       const SizedBox(
                         height: 10,
                       ),
@@ -336,6 +490,27 @@ class _DetailsPageState extends State<DetailsPage> {
                       ),
                       const SizedBox(
                         height: 50,
+                      ),
+                      isReportTaken == true
+                          ? Container(
+                              width: getWidth(100),
+                              alignment: Alignment.center,
+                              child: Text(
+                                "Police action has been initiated in response to this report.",
+                                style: TextStyle(color: Colors.grey),
+                                textAlign: TextAlign.center,
+                              ))
+                          : Align(
+                              alignment: Alignment.center,
+                              child: ButtonWidget(
+                                label: 'Take Action',
+                                onPressed: () {
+                                  takeAction();
+                                },
+                              ),
+                            ),
+                      const SizedBox(
+                        height: 10,
                       ),
                     ],
                   );

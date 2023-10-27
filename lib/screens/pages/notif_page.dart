@@ -72,12 +72,12 @@ class _NotifScreenState extends State<NotifScreen> {
                             padding: const EdgeInsets.only(top: 5, bottom: 5),
                             child: GestureDetector(
                               onTap: () {
-                                if (widget.inUser! == false) {
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (context) => DetailsPage(
-                                            reportId: data.docs[index].id,
-                                          )));
-                                }
+                                // if (widget.inUser! == false) {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => DetailsPage(
+                                          reportId: data.docs[index].id,
+                                        )));
+                                // }
                               },
                               child: Card(
                                 elevation: 3,

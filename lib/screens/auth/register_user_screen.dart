@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:sunspark/widgets/button_widget.dart';
 import 'package:sunspark/widgets/text_widget.dart';
 import 'package:sunspark/widgets/textfield_widget.dart';
+import 'package:email_validator/email_validator.dart';
 
 class RegisterUserScreen extends StatefulWidget {
   const RegisterUserScreen({super.key});
@@ -18,6 +18,7 @@ class RegisterUserScreen extends StatefulWidget {
 
 class _RegisterUserScreenState extends State<RegisterUserScreen> {
   TextEditingController password = TextEditingController();
+  TextEditingController retypepassword = TextEditingController();
   TextEditingController email = TextEditingController();
   TextEditingController firstname = TextEditingController();
   TextEditingController lastname = TextEditingController();
@@ -156,6 +157,14 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                         label: 'Password',
                         controller: password),
                     const SizedBox(
+                      height: 10,
+                    ),
+                    TextFieldWidget(
+                        isObscure: true,
+                        isPassword: true,
+                        label: 'Confirm password',
+                        controller: retypepassword),
+                    const SizedBox(
                       height: 30,
                     ),
                     Padding(
@@ -238,6 +247,15 @@ class _RegisterUserScreenState extends State<RegisterUserScreen> {
                             contactno.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             content: Text('Missing inputs.'),
+                          ));
+                        } else if (EmailValidator.validate(email.text) ==
+                            false) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('Invalid Email address.'),
+                          ));
+                        } else if (password.text != retypepassword.text) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('Password not match.'),
                           ));
                         } else if (contactno.text.length != 10) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(

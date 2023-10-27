@@ -46,6 +46,16 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
     'Unresolved',
   ];
 
+  getHeight(percent) {
+    var toDecimal = percent / 100;
+    return MediaQuery.of(context).size.height * toDecimal;
+  }
+
+  getWidth(percent) {
+    var toDecimal = percent / 100;
+    return MediaQuery.of(context).size.width * toDecimal;
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -109,7 +119,7 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
           ],
         ),
         body: Padding(
-          padding: const EdgeInsets.all(10.0),
+          padding: EdgeInsets.only(left: getWidth(3), right: getWidth(3)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -135,9 +145,10 @@ class _NewHomeScreenState extends State<NewHomeScreen> {
                       value: item,
                       child: Center(
                         child: SizedBox(
-                          width: 325,
+                          width: getWidth(85),
                           child: Padding(
-                            padding: const EdgeInsets.all(5.0),
+                            padding: EdgeInsets.only(
+                                left: getWidth(2), right: getWidth(2)),
                             child: Text(
                               item,
                               style: const TextStyle(

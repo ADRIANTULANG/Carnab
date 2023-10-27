@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import 'package:sunspark/screens/auth/signup_screen.dart';
 import 'package:sunspark/screens/mewhome_screen.dart';
 import 'package:sunspark/widgets/button_widget.dart';
