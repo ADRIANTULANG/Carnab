@@ -1,4 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -21,7 +25,7 @@ import 'package:flutter/services.dart';
 import 'package:sunspark/widgets/toast_widget.dart';
 import 'package:telephony/telephony.dart';
 import 'package:twilio_flutter/twilio_flutter.dart';
-
+import 'package:http/http.dart' as http;
 import 'citizen_screen.dart';
 
 class AddReportPage extends StatefulWidget {
@@ -34,12 +38,27 @@ class AddReportPage extends StatefulWidget {
 }
 
 class _AddReportPageState extends State<AddReportPage> {
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
   @override
   void initState() {
     super.initState();
     determinePosition();
     fillInformationAutomatically();
     addMarker();
+    getToken();
+  }
+
+  Future<void> getToken() async {
+    String? token = await messaging.getToken();
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? id = prefs.getString('id');
+    if (id != null) {
+      await FirebaseFirestore.instance
+          .collection('citizen_user')
+          .doc(id)
+          .update({"fcmToken": token});
+    }
   }
 
   String? validIDurl;
@@ -48,7 +67,7 @@ class _AddReportPageState extends State<AddReportPage> {
 
   TwilioFlutter twilioFlutter = TwilioFlutter(
       accountSid: 'AC416086298c7539950fa857cb837ff2f8',
-      authToken: '8d7f5360a2cfef92c7c40ed4fb580864',
+      authToken: '7f7e7edf872d529327e6da3be3bff09f',
       twilioNumber: '+19899127501');
 
   final nameController = TextEditingController();
@@ -56,6 +75,10 @@ class _AddReportPageState extends State<AddReportPage> {
   final numberController = TextEditingController();
 
   final addressController = TextEditingController();
+  final purokController = TextEditingController();
+  final barangayController = TextEditingController();
+  final municipalityController = TextEditingController();
+  final provinceController = TextEditingController();
 
   final statementController = TextEditingController();
   final othersController = TextEditingController();
@@ -404,20 +427,64 @@ class _AddReportPageState extends State<AddReportPage> {
                           const SizedBox(
                             height: 10,
                           ),
+                          TextBold(
+                            text: 'Address Details',
+                            fontSize: 18,
+                            color: Colors.black,
+                          ),
+                          const SizedBox(
+                            height: 15,
+                          ),
                           TextFieldWidget(
                             isRequred: true,
                             width: 350,
-                            label: 'Address',
-                            controller: addressController,
+                            label: 'Purok',
+                            controller: purokController,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Please enter your address';
+                                return 'Please enter purok no.';
+                              }
+                              return null;
+                            },
+                          ),
+                          TextFieldWidget(
+                            isRequred: true,
+                            width: 350,
+                            label: 'Barangay',
+                            controller: barangayController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter barangay name';
+                              }
+                              return null;
+                            },
+                          ),
+                          TextFieldWidget(
+                            isRequred: true,
+                            width: 350,
+                            label: 'Municipality',
+                            controller: municipalityController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter Municipality name';
+                              }
+                              return null;
+                            },
+                          ),
+                          TextFieldWidget(
+                            isRequred: true,
+                            width: 350,
+                            label: 'Province',
+                            controller: provinceController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter Province name';
                               }
                               return null;
                             },
                           ),
                           const SizedBox(
-                            height: 10,
+                            height: 20,
                           ),
                           Container(
                             color: Colors.black,
@@ -872,7 +939,14 @@ class _AddReportPageState extends State<AddReportPage> {
                                             validIDurl = await prefs
                                                 .getString('validID');
                                           }
-
+                                          addressController.text =
+                                              purokController.text +
+                                                  " " +
+                                                  barangayController.text +
+                                                  " " +
+                                                  municipalityController.text +
+                                                  " " +
+                                                  provinceController.text;
                                           String documentID = await addReport(
                                               nameController.text,
                                               numberController.text,
@@ -889,8 +963,9 @@ class _AddReportPageState extends State<AddReportPage> {
                                               evidences,
                                               selectedOption,
                                               validIDurl);
+                                          sendNotif(documentID: documentID);
                                           _sendSMS(
-                                              'Incident: $selected\nReported by: ${nameController.text}\nReporter Contact Number: ${numberController.text}\nDate and Time: $selectedDateTime');
+                                              'Incident: $selected\nReported by: ${nameController.text}\nReporter Contact Number: ${numberController.text}\nDate and Time: $selectedDateTime\nAddress: ${addressController.text}');
                                           showDialog(
                                             barrierDismissible: false,
                                             context: context,
@@ -970,6 +1045,69 @@ class _AddReportPageState extends State<AddReportPage> {
                   child: CircularProgressIndicator(),
                 )),
     );
+  }
+
+  void sendNotif({required String documentID}) async {
+    var res = await FirebaseFirestore.instance
+        .collection('Officers')
+        .where('fcmToken', isNull: false)
+        .get();
+    var officers = res.docs;
+    for (var i = 0; i < officers.length; i++) {
+      Map mapData = officers[i].data();
+      var body = jsonEncode({
+        "to": mapData['fcmToken'],
+        "notification": {
+          "body":
+              "Incident: $selected, Reported by: ${nameController.text}, Reporter Contact Number: ${numberController.text}, Date and Time: $selectedDateTime, Address: ${addressController.text} with a tracking code $documentID",
+          "title": "Carnab",
+          "subtitle": "this is subtitle",
+        }
+      });
+
+      await http.post(Uri.parse('https://fcm.googleapis.com/fcm/send'),
+          headers: {
+            "Authorization":
+                "key=AAAA1L5LoL4:APA91bFeGnZvZ5h9bzdzz-zYGJ4SOo9MfPBl9mr9gKP5Dydu_FGWdoAgMJRiG9RTvXK3IoVbxh-2RYZ786p_0GwGNszjusO6MxGXFgHLEfLoXLBk0RNY1S3TVpXiZHBFWYGt5lw5n9tR",
+            "Content-Type": "application/json"
+          },
+          body: body);
+    }
+    sendCurrentUserNotif(documentID: documentID);
+  }
+
+  sendCurrentUserNotif({required String documentID}) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? id = await prefs.getString('id');
+    String? token;
+    if (id == null) {
+      token = await messaging.getToken();
+    } else {
+      var res = await FirebaseFirestore.instance
+          .collection('citizen_user')
+          .doc(id)
+          .get();
+      if (res.exists) {
+        Map? userData = res.data();
+        token = userData!['fcmToken'];
+      }
+    }
+    var body = jsonEncode({
+      "to": token!,
+      "notification": {
+        "body":
+            "Hi ${nameController.text}, you have successfully submitted the report with a tracking code $documentID",
+        "title": "Carnab",
+        "subtitle": "this is subtitle",
+      }
+    });
+    await http.post(Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: {
+          "Authorization":
+              "key=AAAA1L5LoL4:APA91bFeGnZvZ5h9bzdzz-zYGJ4SOo9MfPBl9mr9gKP5Dydu_FGWdoAgMJRiG9RTvXK3IoVbxh-2RYZ786p_0GwGNszjusO6MxGXFgHLEfLoXLBk0RNY1S3TVpXiZHBFWYGt5lw5n9tR",
+          "Content-Type": "application/json"
+        },
+        body: body);
   }
 
   void _sendSMS(String message) async {

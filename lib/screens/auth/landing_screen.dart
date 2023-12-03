@@ -58,7 +58,7 @@ class LandingScreen extends StatelessWidget {
           child: Column(
             children: [
               SizedBox(
-                height: getHeight(2),
+                height: getHeight(10),
               ),
               Image.asset(
                 'assets/images/carnab.png',
@@ -88,39 +88,39 @@ class LandingScreen extends StatelessWidget {
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => LoginScreen(
-                                inUser: false,
-                              )));
-                    },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          'assets/images/police.jpg',
-                          height: getHeight(13),
-                        ),
-                        SizedBox(
-                          height: getHeight(1),
-                        ),
-                        TextBold(
-                          text: 'Police Officer',
-                          fontSize: 18,
-                          color: Colors.black,
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    height: getHeight(3),
-                  ),
-                  TextRegular(
-                    text: 'Report as',
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
+                  // GestureDetector(
+                  //   onTap: () {
+                  //     Navigator.of(context).push(MaterialPageRoute(
+                  //         builder: (context) => LoginScreen(
+                  //               inUser: false,
+                  //             )));
+                  //   },
+                  //   child: Column(
+                  //     crossAxisAlignment: CrossAxisAlignment.center,
+                  //     children: [
+                  //       Image.asset(
+                  //         'assets/images/police.jpg',
+                  //         height: getHeight(13),
+                  //       ),
+                  //       SizedBox(
+                  //         height: getHeight(1),
+                  //       ),
+                  //       TextBold(
+                  //         text: 'Police Officer',
+                  //         fontSize: 18,
+                  //         color: Colors.black,
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
+                  // SizedBox(
+                  //   height: getHeight(3),
+                  // ),
+                  // TextRegular(
+                  //   text: 'Report as',
+                  //   fontSize: 14,
+                  //   color: Colors.black,
+                  // ),
                   SizedBox(
                     height: getHeight(2),
                   ),
